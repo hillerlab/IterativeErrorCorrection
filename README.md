@@ -6,6 +6,7 @@ The script SGA-ICE (SGA-Iteratively Correcting Errors) implements iterative erro
 
 # Installation
 First, you need to install this source code branch of SGA, where we added a few new parameters. 
+
  git clone https://github.com/ktrns/sga/commits/master
 
 Then follow the [SGA installation instructions](https://github.com/jts/sga/tree/master/src#readme)
