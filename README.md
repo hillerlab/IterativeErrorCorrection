@@ -5,20 +5,10 @@ Iterative error correction of long Illumina reads minimizes the total amount of 
 The script SGA-ICE (SGA-Iteratively Correcting Errors) implements iterative error correction by using modules from the String Graph Assembler (SGA) [2]. 
 
 # Installation
-First, you need to install this source code branch of SGA. 
+First, you need to install this source code branch of SGA, where we added a few new parameters. 
+ git clone https://github.com/ktrns/sga/commits/master
 
-git clone https://github.com/ktrns/sga/commits/master
-cd sga
-./autogen.sh
-
-bamtools=/path/to/bamtools/
-sparsehash=/path/to/sparsehash-2.0.2/
-jemalloc=/path/to/jemalloc/lib/
-prefix=`pwd`
-cd src
-./configure --with-bamtools=$bamtools --with-sparsehash=$sparsehash --with-jemalloc=$jemalloc --prefix=$prefix
-make
-make install
+Then follow the [SGA installation instructions](https://github.com/jts/sga/tree/master/src#readme)
 
 # Usage
 
