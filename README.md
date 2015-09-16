@@ -6,26 +6,58 @@ The script SGA-ICE (SGA-Iteratively Correcting Errors) implements iterative erro
 
 # Installation
 First, you need to install this source code branch of SGA, where we added a few new parameters. 
-
- git clone https://github.com/ktrns/sga/commits/master
+ 
+ `git clone https://github.com/ktrns/sga/commits/master`
 
 Then follow the [SGA installation instructions](https://github.com/jts/sga/tree/master/src#readme)
 
 # Running SGA-ICE
-All you need is a directory with the fastq files (ending *fastq or *fq). SGA-ICE creates a bash script with all commands for iterative error correction using default parameters that work well in general. To speedup the runtime, we recommended to set the number of threads to the number of cores available in your machine (-t num). 
+All you need is a directory with the fastq files (ending *fastq or *fq). SGA-ICE creates a 'runMe.sh' script with all commands for iterative error correction using default parameters that work well in general. To speedup the runtime, we recommended to set the number of threads to the number of cores available in your machine (-t num). 
  
- *SGA-ICE ***
+ `SGA-ICE.py /path/to/fastq/data/ -t 8`
 
-Then, just executes the shell script. 
- *script.sh*
+If you are happy with the default parameters, just execute 'runMe.sh'. 
  
-For each input file, you will get a final error corrected output file with the ending *finalec.fastq.
+The error corrected files will be located in a /path/to/fastq/data/ec directory.
 
 # Setting parameters
 SGA-ICE allows to control all parameters if you do not want to use the default values. 
 
-** Usage here **
+```
+usage: SGA-ICE.py [-h] [-k KMERS] [-t THREADS] [--noOvlCorr] [--noCleanup]
+                  inputDir
 
+SGA-ICE produces a shell script 'runMe.sh' that contains all commands to run
+iterative error correction of the given read data with the given parameters.
+Read data must be in fastq format and files need to have the ending .fastq or
+.fq.
+
+positional arguments:
+  inputDir              Path to directory with the *.fastq or *.fq files. The
+                        produced 'runMe.sh' will be located here.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -k KMERS, --kmers KMERS
+                        List of k-mers for k-mer correction; values should be
+                        comma-separated. If -k is not provided, SGA-ICE does 3
+                        rounds of k-mer correction with k-mer sizes determined
+                        based on the length of the read from the first file in
+                        inputDir. We advise the user to choose k-mer values
+                        manually if the sequences in the *.fastq files have
+                        different read lengths.
+  -t THREADS, --threads THREADS
+                        Number of threads used. Default is 1. Set to higher
+                        values if you have more than one core and want to
+                        reduce the runtime.
+  --noOvlCorr           If set, do not run a final overlap-based correction
+                        round.
+  --noCleanup           If set, keep all intermediate files in the temporary
+                        directory.
+```
+
+**Example:**
+`SGA-ICE.py /path/to/fastq/data/ -k 40,60,100,125,150,200 --noCleanup --noOvlCorr`
 
 
 
