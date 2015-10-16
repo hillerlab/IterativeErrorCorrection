@@ -7,14 +7,15 @@ The script SGA-ICE (SGA-Iteratively Correcting Errors) implements iterative erro
 # Installation
 First, you need to install this source code branch of SGA, where we added a few new parameters. 
  
- `git clone https://github.com/ktrns/sga/commits/master`
+ `git clone https://github.com/ktrns/sga.git`
 
 Then follow the [SGA installation instructions](https://github.com/jts/sga/tree/master/src#readme)
 
 # Running SGA-ICE
 All you need is a directory with the fastq files (ending *fastq or *fq). SGA-ICE creates a 'runMe.sh' script with all commands for iterative error correction using default parameters that work well in general. To speedup the runtime, we recommended to set the number of threads to the number of cores available in your machine (-t num). 
- 
- `SGA-ICE.py /path/to/fastq/data/ -t 8`
+
+**Example:** 
+  `SGA-ICE.py /path/to/fastq/data/ -t 8`
 
 If you are happy with the default parameters, just execute 'runMe.sh'. 
  
@@ -57,7 +58,7 @@ optional arguments:
 ```
 
 **Example:**
-`SGA-ICE.py /path/to/fastq/data/ -k 40,60,100,125,150,200 --noCleanup --noOvlCorr`
+  `SGA-ICE.py /path/to/fastq/data/ -k 40,60,100,125,150,200 --noCleanup --noOvlCorr`
 
 
 
@@ -67,4 +68,5 @@ optional arguments:
 [2] Simpson JT and Durbin R (2012). Efficient de novo assembly of large genomes using compressed data structures. Genome Research, 22, 549–556.
 
 
-
+# Comments, Requests, Bug reports
+Please email `hiller@mpi-cbg.de`
