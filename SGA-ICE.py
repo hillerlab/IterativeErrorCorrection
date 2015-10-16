@@ -167,6 +167,7 @@ def sga_ice_write(args, filePrefix, fileEnding):
                       "--no-primer-check "
                       "--pe-mode 0 "
                       "--permute-ambiguous "
+                      "--min-length 0"
                       "--out %(file)s.pp.%(ending)s "
                       "%(file)s.%(ending)s \n")
                      % dict(values, file=file, ending=ending))
