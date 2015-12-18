@@ -5,9 +5,9 @@ Iterative error correction of long 250 or 300 bp Illumina reads minimizes the to
 The script SGA-ICE (SGA-Iteratively Correcting Errors) implements iterative error correction by using modules from the String Graph Assembler (SGA) [2]. 
 
 # Installation
-First, you need to install this source code branch of SGA, where we added a few new parameters. 
- 
- `git clone https://github.com/ktrns/sga.git`
+First, you need to install SGA version v0.10.14 or later. 
+
+ `git clone https://github.com/jts/sga.git`
 
 Then follow the [SGA installation instructions](https://github.com/jts/sga/tree/master/src#readme)
 
@@ -26,16 +26,17 @@ SGA-ICE allows to control all parameters if you do not want to use the default v
 
 ```
 usage: SGA-ICE.py [-h] [-k KMERS] [-t THREADS] [--noOvlCorr] [--noCleanup]
+                  [--scriptName SCRIPTNAME] [--errorRate ERRORRATE]
+                  [--minOverlap MINOVERLAP]
                   inputDir
 
-SGA-ICE produces a shell script 'runMe.sh' that contains all commands to run
-iterative error correction of the given read data with the given parameters.
-Read data must be in fastq format and files need to have the ending .fastq or
-.fq.
+SGA-ICE produces a shell script that contains all commands to run iterative
+error correction of the given read data with the given parameters. Read data
+must be in fastq format and files need to have the ending .fastq or .fq.
 
 positional arguments:
   inputDir              Path to directory with the *.fastq or *.fq files. The
-                        produced 'runMe.sh' will be located here.
+                        produced shell script will be located here.
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -55,17 +56,29 @@ optional arguments:
                         round.
   --noCleanup           If set, keep all intermediate files in the temporary
                         directory.
+  --scriptName SCRIPTNAME
+                        Name of the shell script containing the error
+                        correction commands. By default, script is called
+                        runMe.sh
+  --errorRate ERRORRATE
+                        sga correct -e parameter for overlap correction.
+                        Maximum error rate allowed between two sequences to
+                        consider them overlapped. Default is 0.01
+  --minOverlap MINOVERLAP
+                        sga correct -m parameter for overlap correction.
+                        Minimum overlap required between two reads. Default is
+                        40
 ```
 
 **Example:**
-  `SGA-ICE.py /path/to/fastq/data/ -k 40,60,100,125,150,200 --noCleanup --noOvlCorr`
+  `SGA-ICE.py /path/to/fastq/data/ -k 40,60,100,125,150,200 --noCleanup --noOvlCorr --scriptName correctMyData.sh`
 
 
 
 # References
 [1] Sameith K, Roscito J, Hiller M. Iterative error correction of long sequencing reads maximizes accuracy and improves contig assembly. Submitted
 
-[2] Simpson JT and Durbin R (2012). Efficient de novo assembly of large genomes using compressed data structures. Genome Research, 22, 549–556.
+[2] Simpson JT and Durbin R (2012). Efficient de novo assembly of large genomes using compressed data structures. Genome Research, 22, 549-556.
 
 
 # Comments, Requests, Bug reports
