@@ -15,12 +15,15 @@ def __parse_arguments():
     Returns an argument object containing all input parameters.
     """
 
-    parser = argparse.ArgumentParser(description='SGA-ICE produces a shell script \'runMe.sh\' that contains all commands to run iterative error correction of the given read data with the given parameters. \nRead data must be in fastq format and files need to have the ending .fastq or .fq.')
-    parser.add_argument('inputDir', type=str, help='Path to directory with the *.fastq or *.fq files. The produced \'runMe.sh\' will be located here.')
+    parser = argparse.ArgumentParser(description='SGA-ICE produces a shell script that contains all commands to run iterative error correction of the given read data with the given parameters. \nRead data must be in fastq format and files need to have the ending .fastq or .fq.')
+    parser.add_argument('inputDir', type=str, help='Path to directory with the *.fastq or *.fq files. The produced shell script will be located here.')
     parser.add_argument('-k', '--kmers', type=str, default=None, help='List of k-mers for k-mer correction; values should be comma-separated. If -k is not provided, SGA-ICE does 3 rounds of k-mer correction with k-mer sizes determined based on the length of the read from the first file in inputDir. We advise the user to choose k-mer values manually if the sequences in the *.fastq files have different read lengths.')
     parser.add_argument('-t', '--threads', type=int, default='1', help='Number of threads used. Default is 1. Set to higher values if you have more than one core and want to reduce the runtime.')
     parser.add_argument('--noOvlCorr', action="store_true", help='If set, do not run a final overlap-based correction round.')
     parser.add_argument('--noCleanup', action="store_true", help='If set, keep all intermediate files in the temporary directory.')
+    parser.add_argument('--scriptName', type=str, default='runMe.sh', help='Name of the shell script containing the error correction commands. By default, script is called runMe.sh')
+    parser.add_argument('--errorRate', type=float, default='0.01', help='sga correct -e parameter for overlap correction. Maximum error rate allowed between two sequences to consider them overlapped. Default is 0.01')
+    parser.add_argument('--minOverlap', type=int, default='40', help='sga correct -m parameter for overlap correction. Minimum overlap required between two reads. Default is 40')
 
     # print help if no argument given
     if len(sys.argv) < 2:
@@ -50,6 +53,20 @@ def __parse_arguments():
          print '### Temporary files will not be deleted'
     else:
          print '### All temporary files will be deleted'
+
+    if args.errorRate:
+        print '### Error rate for sga correct', args.errorRate
+    else:
+        print '### Error rate for sga correct is 0.01'
+
+    if args.minOverlap:
+        print '### Minimum overlap for sga correct', args.minOverlap
+    else:
+        print '### Minimum overlap for sga correct is 40'
+
+    print 'Shell script is called:', args.scriptName
+
+
 
     return args
 
@@ -90,7 +107,8 @@ def get_read_length(inputDir, exampleFile):
     Returns read length. 
     """
 
-    with open(inputDir + "/" + exampleFile) as f:
+    file=os.path.join(inputDir , exampleFile)
+    with open(file) as f:
         seq = f.readlines()[1].rstrip("\n")
         seqLength = len(seq)
 
@@ -127,7 +145,7 @@ def get_kmers(seqLength, kmers=None):
 
 
 def sga_ice_write(args, filePrefix, fileEnding):
-    """Write output 'runMe.sh' script. This is the script that iteratively runs 
+    """Write output shell script. This is the script that iteratively runs 
     SGA modules. 
     Returns True when writing finished successfully.
     """ 
@@ -141,11 +159,13 @@ def sga_ice_write(args, filePrefix, fileEnding):
     values = {"inputDir": args.inputDir,
               "threads": args.threads,
               "kmers": kmers,
-              "kmers[-1]": kmers[-1]
+              "kmers[-1]": kmers[-1],
+              "errorRate": args.errorRate,
+              "minOverlap": args.minOverlap
              }
 
-    # create runMe.sh script
-    sgaICE = open(args.inputDir + "/runMe.sh", "w")
+    # create shell script
+    sgaICE = open(os.path.join(args.inputDir , args.scriptName), "w")
     sgaICE.write(("#!/bin/bash\n"
                   "set -e\n" 
                   "set -o pipefail\n\n\n"
@@ -162,6 +182,7 @@ def sga_ice_write(args, filePrefix, fileEnding):
     # add commands for SGA-preprocessing each input file
     sgaICE.write("### Run preprocessing for each input file ###\n"
                  "echo \'### Start sga preprocessing ###\'\n")
+    #sga preprocess option --min-length needs to be set to 0, otherwise SGA removes sequences shorter than 40bp without keeping track of sunchronizing between R1 and R2 fastq files.
     for (file, ending) in zip(filePrefix, fileEnding): 
         sgaICE.write(("sga preprocess "
                       "--no-primer-check "
@@ -248,8 +269,8 @@ def sga_ice_write(args, filePrefix, fileEnding):
                           "sga correct "
                           "--prefix all.ec.k%(kmers[-1])d "
                           "--algorithm overlap "
-                          "--error-rate 0.01 "
-                          "-m 40 --threads %(threads)d "
+                          "--error-rate %(errorRate)f "
+                          "-m %(minOverlap)d --threads %(threads)d "
                           "--outfile %(file)s.final.ecOv.%(ending)s "
                           "%(file)s.ec.k%(kmers[-1])d.%(ending)s\n")
                          % dict(values, file=file, ending=ending))
@@ -304,11 +325,11 @@ if __name__ == "__main__":
 
     sga_ice_write(args, filePrefix, fileEnding)
 
-    # make runMe.sh executable
-    st = os.stat(args.inputDir + "/runMe.sh")
-    os.chmod(args.inputDir + "/runMe.sh", st.st_mode | stat.S_IEXEC)
+    # make shell script executable
+    st = os.stat(os.path.join(args.inputDir , args.scriptName))
+    os.chmod(os.path.join(args.inputDir , args.scriptName), st.st_mode | stat.S_IEXEC)
 
     print "\n\nTo run %d correction round with k=%s" % (len(args.kmers), ",".join([str(k) for k in args.kmers])),
     if not args.noOvlCorr:
         print "and a final round of overlap-based correction",
-    print "using %d threads, execute \n%s/runMe.sh" % (args.threads, args.inputDir)
+    print "using %d threads, execute \n%s/%s" % (args.threads, args.inputDir, args.scriptName)
