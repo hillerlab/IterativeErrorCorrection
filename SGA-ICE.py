@@ -204,7 +204,8 @@ def sga_ice_write(args, filePrefix, fileEnding):
     sgaICE.write("sga index -a ropebwt -t %(threads)d all.pp.fastq\n"
                   % values)
 
-    sgaICE.write("rename .pp. .ec.k0. *.pp.*\n"
+#    sgaICE.write("rename .pp. .ec.k0. *.pp.*\n"
+    sgaICE.write("for f in *pp*; do mv $f $(echo $f | sed 's/.pp./.ec.k0./g') ; done\n"
                  "echo \'### Finished sga preprocessing ###\'\n\n")
 
 
