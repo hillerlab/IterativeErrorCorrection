@@ -76,7 +76,7 @@ optional arguments:
 
 
 # References
-[1] Sameith K, Roscito J, Hiller M (2016). Iterative error correction of long sequencing reads maximizes accuracy and improves contig assembly. Briefings in Bioinformatics, in press
+[1] Sameith K, Roscito J, Hiller M (2016). [Iterative error correction of long sequencing reads maximizes accuracy and improves contig assembly](http://bib.oxfordjournals.org/content/early/2016/02/10/bib.bbw003.long). Briefings in Bioinformatics, doi: 10.1093/bib/bbw003
 
 [2] Simpson JT and Durbin R (2012). Efficient de novo assembly of large genomes using compressed data structures. Genome Research, 22, 549-556.
 
