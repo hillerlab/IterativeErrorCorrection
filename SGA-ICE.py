@@ -205,7 +205,7 @@ def sga_ice_write(args, filePrefix, fileEnding):
                   % values)
 
 #    sgaICE.write("rename .pp. .ec.k0. *.pp.*\n"
-    sgaICE.write("for f in *pp*; do mv $f $(echo $f | sed 's/.pp./.ec.k0./g') ; done\n"
+    sgaICE.write("for f in *pp*; do mv $f $(echo $f | sed 's/\(\.pp\.\)\(f.*q\)/.ec.k0.\2/g') ; done\n"
                  "echo \'### Finished sga preprocessing ###\'\n\n")
 
 
