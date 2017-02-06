@@ -94,9 +94,16 @@ def get_file_list(inputDir):
             filePrefix.append(fprefix)
             fileEnding.append("fq")
 
+### 2017.feb.06: error-exit if file contains "SGAICE" somewhere in the name:
+        if "SGAICE" in f: 
+           print "\t ### ERROR, filename check: your fastq file(s) has the string \"SGAICE\" in the name. Please rename it as this string will be used later on to identify all downstream files produced by SGA-ICE\n"
+           sys.exit(1)
+###
+
     if not files:
         print "ERROR: There is no *.fastq or *.fq file in this directory: %s" % inputDir
         sys.exit(1) 
+
 
     print "### These are the fastq files found in " + inputDir + ":\n" + "\n".join(files)
     return files, filePrefix, fileEnding
@@ -189,7 +196,7 @@ def sga_ice_write(args, filePrefix, fileEnding):
                       "--pe-mode 0 "
                       "--permute-ambiguous "
                       "--min-length 0 "
-                      "--out %(file)s.pp.%(ending)s "
+                      "--out %(file)s.SGAICEpreproc.%(ending)s "
                       "%(file)s.%(ending)s \n")
                      % dict(values, file=file, ending=ending))
 
@@ -197,15 +204,14 @@ def sga_ice_write(args, filePrefix, fileEnding):
     sgaICE.write("echo \'    Build new index from the preprocessed input files\'\n")
     # link it if we have a single input file, otherwise cat them all
     if len(filePrefix) == 1:
-        sgaICE.write("ln -s *.pp.f*q all.pp.fastq\n")
+        sgaICE.write("ln -s *.SGAICEpreproc.f*q all.SGAICEpreproc.fastq\n")
     else:
-        sgaICE.write("cat *.pp.f*q > all.pp.fastq\n")
+        sgaICE.write("cat *.SGAICEpreproc.f*q > all.SGAICEpreproc.fastq\n")
 
-    sgaICE.write("sga index -a ropebwt -t %(threads)d all.pp.fastq\n"
+    sgaICE.write("sga index -a ropebwt -t %(threads)d all.SGAICEpreproc.fastq\n"
                   % values)
 
-#    sgaICE.write("rename .pp. .ec.k0. *.pp.*\n"
-    sgaICE.write("for f in *pp*; do mv $f $(echo $f | sed 's/.pp./.ec.k0./g') ; done\n"
+    sgaICE.write("for f in *SGAICEpreproc*; do mv $f $(echo $f | sed 's/.SGAICEpreproc./.SGAICEec.k0./g') ; done\n"
                  "echo \'### Finished sga preprocessing ###\'\n\n")
 
 
@@ -218,15 +224,15 @@ def sga_ice_write(args, filePrefix, fileEnding):
         sgaICE.write("echo \'  Running correction round with k=%d \'\n" % kmers[kIdx])
         for (file, ending) in zip(filePrefix, fileEnding): 
             prevIdx = kIdx-1
-            sgaICE.write(("echo \'    Correcting file %(file)s.ec.k%(prevK)d.%(ending)s\'\n"
+            sgaICE.write(("echo \'    Correcting file %(file)s.SGAICEec.k%(prevK)d.%(ending)s\'\n"
                           "sga correct "
                           "--count-offset 2 "
                           "--threads %(threads)d "
-                          "--prefix all.ec.k%(prevK)d "
-                          "--outfile %(file)s.ec.k%(k)d.%(ending)s "
+                          "--prefix all.SGAICEec.k%(prevK)d "
+                          "--outfile %(file)s.SGAICEec.k%(k)d.%(ending)s "
                           "-k %(k)d "
                           "--learn "
-                          "%(file)s.ec.k%(prevK)d.%(ending)s\n")
+                          "%(file)s.SGAICEec.k%(prevK)d.%(ending)s\n")
                          % dict(values,
                                 file=file,
                                 ending=ending,
@@ -241,12 +247,12 @@ def sga_ice_write(args, filePrefix, fileEnding):
             sgaICE.write("echo \'    Build new index\'\n")
             # link it if we have a single input file, otherwise cat them all
             if len(filePrefix) == 1:
-                sgaICE.write(("ln -s *.ec.k%(k)d.f*q all.ec.k%(k)d.fastq\n")
+                sgaICE.write(("ln -s *.SGAICEec.k%(k)d.f*q all.SGAICEec.k%(k)d.fastq\n")
                               % dict(k=kmers[kIdx]))
             else:
-                sgaICE.write(("cat *.ec.k%(k)d.f*q > all.ec.k%(k)d.fastq\n")
+                sgaICE.write(("cat *.SGAICEec.k%(k)d.f*q > all.SGAICEec.k%(k)d.fastq\n")
                               % dict(k=kmers[kIdx]))
-            sgaICE.write(("sga index -a ropebwt -t %(threads)d all.ec.k%(k)d.fastq\n")
+            sgaICE.write(("sga index -a ropebwt -t %(threads)d all.SGAICEec.k%(k)d.fastq\n")
                           % dict(values, k=kmers[kIdx]))
 
 
@@ -257,23 +263,23 @@ def sga_ice_write(args, filePrefix, fileEnding):
                       "echo \'    Build new index from the output of k-mer correction\'\n")
         # link it if we have a single input file, otherwise cat them all
         if len(filePrefix) == 1:
-            sgaICE.write(("ln -s *.ec.k%(kmers[-1])d.f*q all.ec.k%(kmers[-1])d.fastq\n")
+            sgaICE.write(("ln -s *.SGAICEec.k%(kmers[-1])d.f*q all.SGAICEec.k%(kmers[-1])d.fastq\n")
                          % values)
         else:
-            sgaICE.write(("cat *.ec.k%(kmers[-1])d.f*q > all.ec.k%(kmers[-1])d.fastq\n")
+            sgaICE.write(("cat *.SGAICEec.k%(kmers[-1])d.f*q > all.SGAICEec.k%(kmers[-1])d.fastq\n")
                          % values)
-        sgaICE.write((	"sga index -a ropebwt -t %(threads)d all.ec.k%(kmers[-1])d.fastq\n")
+        sgaICE.write((	"sga index -a ropebwt -t %(threads)d all.SGAICEec.k%(kmers[-1])d.fastq\n")
                       % values)
 
         for (file,ending) in zip(filePrefix, fileEnding): 
-            sgaICE.write(("echo \'    Overlap-correction of file %(file)s.ec.k%(kmers[-1])d.%(ending)s\'\n"
+            sgaICE.write(("echo \'    Overlap-correction of file %(file)s.SGAICEec.k%(kmers[-1])d.%(ending)s\'\n"
                           "sga correct "
-                          "--prefix all.ec.k%(kmers[-1])d "
+                          "--prefix all.SGAICEec.k%(kmers[-1])d "
                           "--algorithm overlap "
                           "--error-rate %(errorRate)f "
                           "-m %(minOverlap)d --threads %(threads)d "
-                          "--outfile %(file)s.final.ecOv.%(ending)s "
-                          "%(file)s.ec.k%(kmers[-1])d.%(ending)s\n")
+                          "--outfile %(file)s.final.SGAICEecOv.%(ending)s "
+                          "%(file)s.SGAICEec.k%(kmers[-1])d.%(ending)s\n")
                          % dict(values, file=file, ending=ending))
         sgaICE.write("echo \'### Finished overlap-based correction ###\'\n\n")
 
@@ -285,26 +291,26 @@ def sga_ice_write(args, filePrefix, fileEnding):
             # convert fastq to fasta:
             sgaICE.write(("awk 'BEGIN {OFS = \"\\n\"} "
                           "{header = $0 ; getline seq ; getline qheader ; getline qseq ; print \">\"header, seq}' "
-                          "< %(file)s.final.ecOv.%(ending)s > %(file)s.final.ecOv.%(ending)s.fasta\n")
+                          "< %(file)s.final.SGAICEecOv.%(ending)s > %(file)s.final.SGAICEecOv.%(ending)s.fasta\n")
                          % dict(values, file=file, ending=ending))
 
         # move the final files afte overlap-correction
-        sgaICE.write(("mv *final.ecOv.f*q* %(inputDir)s/ec\n"
-                      "\necho; echo; echo \'### ALL DONE.  Final error-corrected files after k-mer-based and overlap-based correction are %(inputDir)s/ec/*.final.ecOv.f*q* ###\'\n")
+        sgaICE.write(("mv *final.SGAICEecOv.f*q* %(inputDir)s/ec\n"
+                      "\necho; echo; echo \'### ALL DONE.  Final error-corrected files after k-mer-based and overlap-based correction are %(inputDir)s/ec/*.final.SGAICEecOv.f*q* ###\'\n")
                      % values)
 
     else:
         # move the final files after k-mer correction
         sgaICE.write("echo '### Copying final files to \'ec\' directory ###\'\n")
         for (file,ending) in zip(filePrefix, fileEnding): 
-            sgaICE.write(("cp %(file)s.ec.k%(kmers[-1])d.%(ending)s  %(inputDir)s/ec/%(file)s.final.ecKmer.%(ending)s\n")
+            sgaICE.write(("cp %(file)s.SGAICEec.k%(kmers[-1])d.%(ending)s  %(inputDir)s/ec/%(file)s.final.SGAICEecKmer.%(ending)s\n")
                          % dict(values, file=file, ending=ending))
-        sgaICE.write(("\necho; echo; echo '### ALL DONE.  Final error-corrected files after k-mer-based correction are %(inputDir)s/ec/*.final.ecKmer.f*q ###\'\n")
+        sgaICE.write(("\necho; echo; echo '### ALL DONE.  Final error-corrected files after k-mer-based correction are %(inputDir)s/ec/*.final.SGAICEecKmer.f*q ###\'\n")
                      % values)
 
     if cleanup:
         sgaICE.write("\n### Remove temp dir: ###\n"
-                     "rm -rf $tmpdir\n")
+                     "rm -rf $tmpDir\n")
     else:
         sgaICE.write("echo \"### SGA-ICE is finished. All temporary files are in this directory: $tmpDir\"\n")
 
